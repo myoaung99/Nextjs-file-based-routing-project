@@ -1,42 +1,78 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
-import { getFilteredEvents } from "../../../data/dummy-data";
 import EventList from "../../../components/events/event-list";
+import useSWR from "swr";
 
 const FilteredEvents = () => {
   const router = useRouter();
-  const slug = router.query.slug;
+  const [allEvents, setAllEvents] = useState();
+  // fetch data
 
-  if (!slug) {
+  const filterDate = router.query.slug;
+
+  const fetcher = (url) => fetch(url).then((res) => res.json());
+
+  const { data, error } = useSWR(
+    "https://nextjs-course-e05eb-default-rtdb.firebaseio.com/events.json",
+    fetcher
+  );
+
+  useEffect(() => {
+    if (data) {
+      const transformedEvents = [];
+
+      for (const key in data) {
+        transformedEvents.push({ id: key, ...data[key] });
+      }
+      setAllEvents(transformedEvents);
+    }
+  }, [data]);
+
+  if (error) {
+    return <p>Something went wrong.</p>;
+  }
+
+  // event အကုန်
+  if (!allEvents) {
     return <p>Loading...</p>;
   }
 
-  const filteredYear = slug[0];
-  const filteredMonth = slug[1];
+  // router.query က second re-render မှရမှာ
+  // အဲ့တာကြောင့် allEvents ရှိပြီးမှ စစ်တဲ့ flow ကိုရေးထားတာပါ
+  // all event က useEffect နဲ့ second re-evaluate ကြမှ ထည့်ထားတာပါ
+  const filteredYear = filterDate[0];
+  const filteredMonth = filterDate[1];
 
   const numYear = +filteredYear;
   const numMonth = +filteredMonth;
+
+  const filteredEvents = allEvents.filter((event) => {
+    const eventDate = new Date(event.date);
+    return (
+      eventDate.getFullYear() === numYear &&
+      eventDate.getMonth() === numMonth - 1
+    );
+  });
 
   if (
     isNaN(numYear) ||
     isNaN(numMonth) ||
     numYear > 2030 ||
+    numYear < 2021 ||
     numMonth < 1 ||
     numMonth > 12 ||
-    slug.length > 2
+    error
   ) {
-    return <p>Invalid filters. Please correct your filters.</p>;
+    return <p>Invalid filter. Please adjust your values!</p>;
   }
 
-  const filteredEvent = getFilteredEvents({ year: numYear, month: numMonth });
-
-  if (filteredEvent && filteredEvent.length === 0) {
-    return <p>There is no event.</p>;
+  if (!filteredEvents || filteredEvents.length === 0) {
+    return <p>There is no event</p>;
   }
 
   return (
     <div>
-      <EventList items={filteredEvent} />
+      <EventList items={filteredEvents} />
     </div>
   );
 };

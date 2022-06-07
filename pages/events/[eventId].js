@@ -1,11 +1,8 @@
+import Head from "next/head";
 import EventSummary from "./../../components/event-detail/event-summary";
 import EventLogistics from "./../../components/event-detail/event-logistics";
 import EventContent from "./../../components/event-detail/event-content";
-import {
-  getAllEvents,
-  getEventDetail,
-  getFeaturedEvents,
-} from "../../helper/api-util";
+import { getEventDetail, getFeaturedEvents } from "../../helper/api-util";
 
 const EventDetail = (props) => {
   const { event } = props;
@@ -16,6 +13,11 @@ const EventDetail = (props) => {
 
   return (
     <>
+      <title>Event Detail</title>
+      <meta
+        title="description"
+        content="Event that you might be interested..."
+      />
       <EventSummary title={event.title} />
       <EventLogistics
         date={event.date}

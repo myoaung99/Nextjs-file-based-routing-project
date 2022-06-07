@@ -1,3 +1,4 @@
+import Head from "next/head";
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import EventList from "../../../components/events/event-list";
@@ -28,13 +29,23 @@ const FilteredEvents = () => {
     }
   }, [data]);
 
+  let pageHead;
+
   if (error) {
-    return <p>Something went wrong.</p>;
+    return (
+      <>
+        <p>Something went wrong.</p>
+      </>
+    );
   }
 
   // event အကုန်
-  if (!allEvents) {
-    return <p>Loading...</p>;
+  if (!allEvents || !filterDate) {
+    return (
+      <>
+        <p>Loading...</p>
+      </>
+    );
   }
 
   // router.query က second re-render မှရမှာ
@@ -45,6 +56,16 @@ const FilteredEvents = () => {
 
   const numYear = +filteredYear;
   const numMonth = +filteredMonth;
+
+  pageHead = (
+    <Head>
+      <title>Filtered Events</title>
+      <meta
+        title="description"
+        content={`Filtered events that is at ${numMonth}/${numYear}`}
+      />
+    </Head>
+  );
 
   const filteredEvents = allEvents.filter((event) => {
     const eventDate = new Date(event.date);
@@ -63,15 +84,26 @@ const FilteredEvents = () => {
     numMonth > 12 ||
     error
   ) {
-    return <p>Invalid filter. Please adjust your values!</p>;
+    return (
+      <>
+        {pageHead}
+        <p>Invalid filter. Please adjust your values!</p>
+      </>
+    );
   }
 
   if (!filteredEvents || filteredEvents.length === 0) {
-    return <p>There is no event</p>;
+    return (
+      <>
+        {pageHead}
+        <p>There is no event</p>
+      </>
+    );
   }
 
   return (
     <div>
+      {pageHead}
       <EventList items={filteredEvents} />
     </div>
   );
